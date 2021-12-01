@@ -1,11 +1,29 @@
-# eHIDS 介绍
-以eBPF实现的HIDS demo.
+![](https://ebpf.io/static/logo-big-9cf8920e80cdc57e6ea60825ebe287ca.png)
 
+# eHIDS 介绍
+eBPF内核技术实现的HIDS demo. 
+
+功能实现：
 1. TCP网络数据捕获
 2. UDP网络数据捕获
 3. uprobe方式的DNS信息捕获
 4. 进程数据捕获
 5. uprobe方式实现JAVA的RASP命令执行场景事件捕获
+6. eBPF的go框架实现，针对kprobe\uprobe挂载方式，多类型event进行抽象实现。
+7. 开发者只需要实现内核态C文件，用户态go文件，用户态event消息结构体三个文件即可，框架会自动加载执行。
+8. 使用者可以按照logger的interface自行实现数据的上报处理，比如上报到ES\kafka等日志中心。
+
+
+# 原理
+
+参考[ebpf](https://ebpf.io)官网的介绍
+![](https://ebpf.io/static/overview-bf463455a5666fc3fb841b9240d588ff.png)
+
+1. 内核态用C写eBPF代码，llvm编译为eBPF字节码。
+2. 用户态使用golang编写，cilium/ebpf纯go类库，做eBPF字节码的内核加载，kprobe/uprobe HOOK对应函数。
+3. 用户态使用golang做事件读取、解码、处理。
+
+
 
 # 说明
 
@@ -84,11 +102,10 @@ root@vmubuntu:/home/cfc4n/project/ehids# ./bin/ehids
 
 # 参考
 
-参考了几个ebpf的项目，很多都是[bcc](https://github.com/iovisor/bcc)写的，我这里去掉[bcc](https://github.com/iovisor/bcc)写法，改为纯ebpf的内核态编码实现。用户态的加载、挂载、读取用go实现。
-
+* https://ebpf.io
 * https://github.com/trichimtrich/dns-tcp-ebpf
 * https://github.com/p-/socket-connect-bpf
   
 # 团队招聘
 
-美团安全团队持续招人，尤其是HIDS项目，欢迎你的加入，详情见：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/)
+美团安全团队持续招人，尤其是HIDS项目，欢迎你的加入，详情见：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)
