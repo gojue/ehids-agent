@@ -24,7 +24,6 @@ type EBPFProbeObject struct {
 
 func (t *EBPFProbeObject) initDecodeFun() {
 	panic("e.EBPFProbeObject.DecodeFun not implemented yet")
-	return
 }
 
 func (e *EBPFProbeObject) DecodeFun(em *ebpf.Map) (IEventStruct, bool) {

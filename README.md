@@ -107,5 +107,4 @@ root@vmubuntu:/home/cfc4n/project/ehids# ./bin/ehids
 * https://github.com/p-/socket-connect-bpf
   
 # 团队招聘
-
-美团安全团队持续招人，尤其是HIDS项目，欢迎你的加入，详情见：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)
+该仓库非美团在用HIDS版本，为精简后demo，若需要查看详细全部源码，请点击：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)

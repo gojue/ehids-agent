@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	dns "github.com/cirocosta/rawdns/lib"
 	"net"
+
+	dns "github.com/cirocosta/rawdns/lib"
 )
 
 type UDPEvent struct {
@@ -43,14 +44,14 @@ func (e *UDPEvent) Decode(payload []byte) (err error) {
 		return fmt.Errorf("failed to decode packet: %s\n", err)
 	}
 
-	e.ask = make([]question,len(m.Questions))
+	e.ask = make([]question, len(m.Questions))
 	for i := 0; i < len(m.Questions); i++ {
 		q := m.Questions[i]
-		e.ask[i] = question{ q.QNAME, fmt.Sprintf("%d",q.QCLASS), fmt.Sprintf("%d",q.QTYPE)}
+		e.ask[i] = question{q.QNAME, fmt.Sprintf("%d", q.QCLASS), fmt.Sprintf("%d", q.QTYPE)}
 		//fmt.Println("===ASK===", q.QNAME, q.QCLASS, q.QTYPE)
 	}
 
-	e.ans = make([]answers,len(m.Answers))
+	e.ans = make([]answers, len(m.Answers))
 
 	for i := 0; i < len(m.Answers); i++ {
 		r := m.Answers[i]
@@ -65,7 +66,7 @@ func (e *UDPEvent) Decode(payload []byte) (err error) {
 		} else {
 			//fmt.Println("===ANS===", r.CLASS, r.NAME, r.TYPE, r.RDATA)
 			an.qtype = "ANS"
-			an.qinfo = fmt.Sprintf("===ANS=== %s, %s, %s, %s", r.CLASS, r.NAME, r.TYPE, r.RDATA)
+			an.qinfo = fmt.Sprintf("===ANS=== %d, %s, %d, %s", uint16(r.CLASS), r.NAME, uint16(r.TYPE), r.RDATA)
 		}
 		e.ans[i] = an
 	}
@@ -84,7 +85,7 @@ func (te *UDPEvent) String() string {
 		s += fmt.Sprintf("qtype:%s, qinfo:%s.\t", ans.qtype, ans.qinfo)
 	}
 
-	return  s
+	return s
 }
 
 func (e *UDPEvent) Clone() IEventStruct {

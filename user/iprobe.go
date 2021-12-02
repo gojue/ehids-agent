@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cilium/ebpf"
-	"github.com/cilium/ebpf/perf"
-	"github.com/cilium/ebpf/ringbuf"
 	"io"
 	"log"
 	"os"
+
+	"github.com/cilium/ebpf"
+	"github.com/cilium/ebpf/perf"
+	"github.com/cilium/ebpf/ringbuf"
 )
 
 type IBPFProbe interface {
@@ -42,7 +43,7 @@ type IBPFProbe interface {
 	//OutPut() bool
 
 	// Decode 解码，输出或发送到消息队列等
-	Decode(*ebpf.Map, []byte) (string ,error)
+	Decode(*ebpf.Map, []byte) (string, error)
 
 	// Close 关闭退出
 	Close() error
@@ -136,15 +137,14 @@ func (e *EBPFProbe) AttachProbe() error {
 
 func (e *EBPFProbe) readEvents() error {
 	var errChan = make(chan error, 8)
-
 	for _, event := range e.probeObjects.Events() {
-		switch  {
+		switch {
 		case event.Type() == ebpf.RingBuf:
 			go e.ringbufEventReader(errChan, event)
 		case event.Type() == ebpf.PerfEventArray:
 			go e.perfEventReader(errChan, event)
 		default:
-			errChan <- fmt.Errorf("Not support mapType:%s , mapinfo:%s", event.Type().String(),event.String())
+			errChan <- fmt.Errorf("Not support mapType:%s , mapinfo:%s", event.Type().String(), event.String())
 		}
 	}
 
@@ -156,10 +156,10 @@ func (e *EBPFProbe) readEvents() error {
 	}
 }
 
-func (e *EBPFProbe) perfEventReader(errChan chan error, em *ebpf.Map)  {
+func (e *EBPFProbe) perfEventReader(errChan chan error, em *ebpf.Map) {
 	rd, err := perf.NewReader(em, os.Getpagesize())
 	if err != nil {
-		errChan <- fmt.Errorf("creating %s reader dns: %s", em.String(),err)
+		errChan <- fmt.Errorf("creating %s reader dns: %s", em.String(), err)
 		return
 	}
 	defer rd.Close()
@@ -194,14 +194,14 @@ func (e *EBPFProbe) perfEventReader(errChan chan error, em *ebpf.Map)  {
 		}
 
 		// 上报数据
-		e.Write(fmt.Sprintf("probeName:%s, probeTpye:%s, %s", e.name, e.probeType, result))
+		e.Write(result)
 	}
 }
 
-func (e *EBPFProbe) ringbufEventReader(errChan chan error, em *ebpf.Map)  {
+func (e *EBPFProbe) ringbufEventReader(errChan chan error, em *ebpf.Map) {
 	rd, err := ringbuf.NewReader(em)
 	if err != nil {
-		errChan <- fmt.Errorf("creating %s reader dns: %s", em.String(),err)
+		errChan <- fmt.Errorf("creating %s reader dns: %s", em.String(), err)
 		return
 	}
 	defer rd.Close()
@@ -224,8 +224,6 @@ func (e *EBPFProbe) ringbufEventReader(errChan chan error, em *ebpf.Map)  {
 			return
 		}
 
-
-
 		var result string
 		result, err = e.child.Decode(em, record.RawSample)
 		if err != nil {
@@ -234,7 +232,7 @@ func (e *EBPFProbe) ringbufEventReader(errChan chan error, em *ebpf.Map)  {
 		}
 
 		// 上报数据
-		e.Write(fmt.Sprintf("probeName:%s, probeTpye:%s, %s", e.name, e.probeType, result))
+		e.Write(result)
 	}
 }
 
@@ -257,8 +255,8 @@ func (e *EBPFProbe) Run() error {
 }
 
 // 写入数据，或者上传到远程数据库，写入到其他chan 等。
-func (e *EBPFProbe) Write(s string) {
-	//
+func (e *EBPFProbe) Write(result string) {
+	s := fmt.Sprintf("probeName:%s, probeTpye:%s, %s", e.name, e.probeType, result)
 	e.logger.Println(s)
 }
 
