@@ -14,9 +14,9 @@ CLANG ?= clang
 EXTRA_CFLAGS ?= -O2 -mcpu=v1 -nostdinc
 
 LINUXINCLUDE =  \
-				-I/usr/include \
-				-I/home/cfc4n/download/linux-5.11.0/include \
-				-I/home/cfc4n/download/linux-5.11.0/tools/lib
+		-I/usr/include \
+		-I/home/cfc4n/download/linux-5.11.0/include \
+		-I/home/cfc4n/download/linux-5.11.0/tools/lib
 
 
 all: $(KERN_OBJECTS) build
@@ -25,9 +25,9 @@ all: $(KERN_OBJECTS) build
 .PHONY: clean
 
 clean:
-	rm -rf user/bytecode/*.d
-	rm -rf user/bytecode/*.o
-	rm -rf bin/ehids
+	rm -f user/bytecode/*.d
+	rm -f user/bytecode/*.o
+	rm -f bin/ehids
 
 $(KERN_OBJECTS): %.o: %.c
 	$(CLANG) $(EXTRA_CFLAGS) \

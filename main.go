@@ -26,7 +26,7 @@ func main() {
 	logger := log.Default()
 	for k, probe := range user.ProbeMaps {
 		if probe.ProbeName() != "EBPFProbeUJavaRASP" && probe.ProbeName() != "EBPFProbeProc" {
-			continue
+			// continue   模块启用临时开关
 		}
 
 		logger.Printf("start to run %s probe", k)
