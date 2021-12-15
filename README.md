@@ -23,7 +23,25 @@ eBPF内核技术实现的HIDS demo.
 2. 用户态使用golang编写，cilium/ebpf纯go类库，做eBPF字节码的内核加载，kprobe/uprobe HOOK对应函数。
 3. 用户态使用golang做事件读取、解码、处理。
 
+# 规划
+## 排期规划
+笔者在从源码角度分析cilium、datadog、tracee、falco、kubeArmor等云原生相关eBPF技术实现的运行时安全防护产品，在分析完成后，会继续规划本产品的设计方案、思路、功能等。
 
+当前进展完成
+
+* 【DONE】2021-12-09 [Cilium eBPF实现机制源码分析](https://www.cnxct.com/how-does-cilium-use-ebpf-with-go-and-c/?f=g_ehids)
+* 【DING】2021-12-19 datadog-agent eBPF实现机制源码分析
+* 【TODO】tracee eBPF实现机制源码分析
+* ...
+
+## 产品规划
+1. 功能完善（网络、进程、文件、事件）
+2. 监控
+3. 告警
+4. 熔断
+5. 统计
+6. 对账
+7. 统一管控
 
 # 说明
 
