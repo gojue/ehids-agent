@@ -1,90 +1,138 @@
 package user
 
 import (
+	"bytes"
 	"context"
-	_ "embed"
-	"log"
-
+	"ehids/assets"
 	"github.com/cilium/ebpf"
-	"github.com/cilium/ebpf/link"
+	manager "github.com/ehids/ebpfmanager"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
+	"log"
+	"math"
 )
 
-type EBPFProbeProc struct {
-	EBPFProbe
+type MProcProbe struct {
+	Module
+	bpfManager        *manager.Manager
+	bpfManagerOptions manager.Options
+	eventFuncMaps     map[*ebpf.Map]IEventStruct
+	eventMaps         []*ebpf.Map
 }
 
 //对象初始化
-func (e *EBPFProbeProc) Init(ctx context.Context, logger *log.Logger) error {
-	e.EBPFProbe.Init(ctx, logger)
-	e.probeObjects = &ProcProbeObjects{}
-	e.probeBytes = ProcProbeBytes
-	e.EBPFProbe.SetChild(e)
+func (this *MProcProbe) Init(ctx context.Context, logger *log.Logger) error {
+	this.Module.Init(ctx, logger)
+	this.Module.SetChild(this)
+	this.eventMaps = make([]*ebpf.Map, 0, 2)
+	this.eventFuncMaps = make(map[*ebpf.Map]IEventStruct)
 	return nil
 }
 
-func (e *EBPFProbeProc) AttachProbe() error {
-
-	tp1, err := link.Kretprobe("copy_process", e.probeObjects.(*ProcProbeObjects).KretprobeCopyProcess) // fork
-	if err != nil {
-		log.Fatalf("link func: %s", err)
+func (this *MProcProbe) Start() error {
+	if err := this.start(); err != nil {
+		return err
 	}
-	e.reader = append(e.reader, tp1)
-
-	// initDecodeFun
-	e.probeObjects.initDecodeFun()
 	return nil
 }
 
-type ProcProbeObjects struct {
-	ProcProbePrograms
-	ProcProbeMaps
-	EBPFProbeObject
-}
+func (this *MProcProbe) start() error {
 
-func (t *ProcProbeObjects) initDecodeFun() {
-	//eventMap 与解码函数映射
-	t.eventFuncMap = make(map[*ebpf.Map]IEventStruct)
-	t.eventFuncMap[t.RingbufProc] = &ForkProcEvent{}
-	return
-}
+	// fetch ebpf assets
+	javaBuf, err := assets.Asset("user/bytecode/proc_kern.o")
+	if err != nil {
+		return errors.Wrap(err, "couldn't find asset")
+	}
 
-func (d *ProcProbeObjects) Close() error {
-	err := d.ProcProbePrograms.Close()
+	// setup the managers
+	this.setupManagers()
+
+	// initialize the bootstrap manager
+	if err := this.bpfManager.InitWithOptions(bytes.NewReader(javaBuf), this.bpfManagerOptions); err != nil {
+		return errors.Wrap(err, "couldn't init manager")
+	}
+
+	// start the bootstrap manager
+	if err := this.bpfManager.Start(); err != nil {
+		return errors.Wrap(err, "couldn't start bootstrap manager")
+	}
+
+	// 加载map信息，map对应events decode表。
+	err = this.initDecodeFun()
 	if err != nil {
 		return err
 	}
-	return d.ProcProbeMaps.Close()
+
+	return nil
 }
 
-func (d *ProcProbeObjects) Events() []*ebpf.Map {
-	var m = []*ebpf.Map{d.RingbufProc}
-	return m
-}
-
-type ProcProbePrograms struct {
-	KretprobeCopyProcess *ebpf.Program `ebpf:"kretprobe_copy_process"`
-}
-
-func (p *ProcProbePrograms) Close() (e error) {
-	e = p.KretprobeCopyProcess.Close()
-	if e != nil {
-		return e
+func (this *MProcProbe) Close() error {
+	if err := this.bpfManager.Stop(manager.CleanAll); err != nil {
+		return errors.Wrap(err, "couldn't stop manager")
 	}
-	return
+	return nil
 }
 
-//
-type ProcProbeMaps struct {
-	RingbufProc *ebpf.Map `ebpf:"ringbuf_proc"`
+func (this *MProcProbe) setupManagers() {
+	this.bpfManager = &manager.Manager{
+		Probes: []*manager.Probe{
+			{
+				Section:          "kretprobe/copy_process",
+				EbpfFuncName:     "kretprobe_copy_process",
+				AttachToFuncName: "copy_process",
+			},
+		},
+
+		Maps: []*manager.Map{
+			{
+				Name: "ringbuf_proc",
+			},
+		},
+	}
+
+	this.bpfManagerOptions = manager.Options{
+		DefaultKProbeMaxActive: 512,
+
+		VerifierOptions: ebpf.CollectionOptions{
+			Programs: ebpf.ProgramOptions{
+				LogSize: 2097152,
+			},
+		},
+
+		RLimit: &unix.Rlimit{
+			Cur: math.MaxUint64,
+			Max: math.MaxUint64,
+		},
+	}
 }
 
-func (m *ProcProbeMaps) Close() error {
-	return m.RingbufProc.Close()
+func (this *MProcProbe) DecodeFun(em *ebpf.Map) (IEventStruct, bool) {
+	fun, found := this.eventFuncMaps[em]
+	return fun, found
 }
 
-//go:embed bytecode/proc_kern.o
-var ProcProbeBytes []byte
+func (this *MProcProbe) initDecodeFun() error {
+	//eventMap 与解码函数映射
+	procEventsMap, found, err := this.bpfManager.GetMap("ringbuf_proc")
+	if err != nil {
+		return err
+	}
+	if !found {
+		return errors.New("cant found map:events")
+	}
+	this.eventMaps = append(this.eventMaps, procEventsMap)
+	this.eventFuncMaps[procEventsMap] = &ForkProcEvent{}
+
+	return nil
+}
+
+func (this *MProcProbe) Events() []*ebpf.Map {
+	return this.eventMaps
+}
 
 func init() {
-	Register(&EBPFProbeProc{EBPFProbe{name: "EBPFProbeProc", probeType: PROBE_TYPE_KPROBE}})
+	mod := &MProcProbe{}
+	mod.name = "EBPFProbeProc"
+	mod.mType = PROBE_TYPE_KPROBE
+	Register(mod)
 }

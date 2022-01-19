@@ -1,4 +1,4 @@
-![](https://ebpf.io/static/logo-big-9cf8920e80cdc57e6ea60825ebe287ca.png)
+![](./images/ehids-logo-1.png)
 
 # eHIDS 介绍
 eBPF内核技术实现的HIDS demo. 

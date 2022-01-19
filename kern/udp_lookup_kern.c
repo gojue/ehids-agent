@@ -1,8 +1,6 @@
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
-// #include <linux/socket.h>
-// #include <net/sock.h>
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-dnsind-udp-size
 // max udp size for DNS
@@ -51,7 +49,6 @@ int trace_udp_recvmsg(struct pt_regs *ctx)
     // https://github.com/iovisor/bcc/issues/1858
     u16 dport = 0;
     bpf_probe_read(&dport, sizeof(dport), &sk->__sk_common.skc_dport);
-
 
     // only grab port 53 packets, 13568 is ntohs(53)
     if (dport == 13568)

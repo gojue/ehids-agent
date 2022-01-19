@@ -2,15 +2,20 @@ package user
 
 import "fmt"
 
-var ProbeMaps = make(map[string]IBPFProbe)
+var modules = make(map[string]IModule)
 
-func Register(p IBPFProbe) {
+func Register(p IModule) {
 	if p == nil {
 		panic("Register probe is nil")
 	}
-	name := p.ProbeName()
-	if _, dup := ProbeMaps[name]; dup {
+	name := p.Name()
+	if _, dup := modules[name]; dup {
 		panic(fmt.Sprintf("Register called twice for probe %s", name))
 	}
-	ProbeMaps[name] = p
+	modules[name] = p
+}
+
+// GetModules 获取modules列表
+func GetModules() map[string]IModule {
+	return modules
 }

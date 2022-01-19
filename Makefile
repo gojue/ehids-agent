@@ -4,6 +4,7 @@ TARGETS += kern/dns_lookup
 TARGETS += kern/udp_lookup
 TARGETS += kern/java_exec
 TARGETS += kern/proc
+EBPF_TARGETS :=$(wildcard ./user/bytecode/*.o)
 
 # Generate file name-scheme based on TARGETS
 KERN_SOURCES = ${TARGETS:=_kern.c}
@@ -19,10 +20,10 @@ LINUXINCLUDE =  \
 		-I/home/cfc4n/download/linux-5.11.0/tools/lib
 
 
-all: $(KERN_OBJECTS) build
+all: $(KERN_OBJECTS) assets build
 	@echo $(shell date)
 
-.PHONY: clean
+.PHONY: clean assets
 
 clean:
 	rm -f user/bytecode/*.d
@@ -35,6 +36,9 @@ $(KERN_OBJECTS): %.o: %.c
 		-target bpfel -c $< -o $(subst kern/,user/bytecode/,$@) \
 		-fno-ident -fdebug-compilation-dir . -g -D__BPF_TARGET_MISSING="GCC error \"The eBPF is using target specific macros, please provide -target\"" \
 		-MD -MP
+
+assets:
+	go-bindata -pkg assets -o "assets/ebpf_probe.go" $(EBPF_TARGETS)
 
 build:
 	go build -o bin/ehids .

@@ -1,100 +1,145 @@
 package user
 
 import (
+	"bytes"
 	"context"
-	_ "embed"
-	"fmt"
+	"ehids/assets"
 	"github.com/cilium/ebpf"
-	"github.com/cilium/ebpf/link"
+	manager "github.com/ehids/ebpfmanager"
+	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 	"log"
+	"math"
 )
 
-type EBPFProbeUDNS struct {
-	EBPFProbe
+type MUDNSProbe struct {
+	Module
+	bpfManager        *manager.Manager
+	bpfManagerOptions manager.Options
+	eventFuncMaps     map[*ebpf.Map]IEventStruct
+	eventMaps         []*ebpf.Map
 }
 
 //对象初始化
-func (e *EBPFProbeUDNS) Init(ctx context.Context, logger *log.Logger) error {
-	e.EBPFProbe.Init(ctx, logger)
-	e.probeObjects = &DNSProbeObjects{}
-	e.probeBytes = DNSProbeBytes
-	e.EBPFProbe.SetChild(e)
+func (this *MUDNSProbe) Init(ctx context.Context, logger *log.Logger) error {
+	this.Module.Init(ctx, logger)
+	this.Module.SetChild(this)
+	this.eventMaps = make([]*ebpf.Map, 0, 2)
+	this.eventFuncMaps = make(map[*ebpf.Map]IEventStruct)
 	return nil
 }
 
-func (e *EBPFProbeUDNS) AttachProbe() error {
-	ex, err := link.OpenExecutable("/lib/x86_64-linux-gnu/libc.so.6")
-	if err != nil {
-		return fmt.Errorf("cant open executable /lib/x86_64-linux-gnu/libc.so.6 :%v", err)
+func (this *MUDNSProbe) Start() error {
+	if err := this.start(); err != nil {
+		return err
 	}
-	kp, err := ex.Uprobe("getaddrinfo", e.probeObjects.(*DNSProbeObjects).KprobeDNSGet, nil)
-	if err != nil {
-		return fmt.Errorf("opening uprobe: %s", err)
-	}
-	e.reader = append(e.reader, kp)
-
-	kpr, err := ex.Uretprobe("getaddrinfo", e.probeObjects.(*DNSProbeObjects).KprobeDNSGetRet, nil)
-	if err != nil {
-		return fmt.Errorf("opening kprobe: %s", err)
-	}
-	e.reader = append(e.reader, kpr)
-
-	// initDecodeFun
-	e.probeObjects.initDecodeFun()
 	return nil
 }
 
-type DNSProbeObjects struct {
-	DNSProbePrograms
-	DNSProbeMaps
-	EBPFProbeObject
-}
+func (this *MUDNSProbe) start() error {
 
-func (t *DNSProbeObjects) initDecodeFun() {
-	//eventMap 与解码函数映射
-	t.eventFuncMap = make(map[*ebpf.Map]IEventStruct)
-	t.eventFuncMap[t.DNSEvents] = &DNSEVENT{}
-	return
-}
+	// fetch ebpf assets
+	javaBuf, err := assets.Asset("user/bytecode/dns_lookup_kern.o")
+	if err != nil {
+		return errors.Wrap(err, "couldn't find asset")
+	}
 
-func (d *DNSProbeObjects) Close() error {
-	err := d.DNSProbePrograms.Close()
+	// setup the managers
+	this.setupManagers()
+
+	// initialize the bootstrap manager
+	if err := this.bpfManager.InitWithOptions(bytes.NewReader(javaBuf), this.bpfManagerOptions); err != nil {
+		return errors.Wrap(err, "couldn't init manager")
+	}
+
+	// start the bootstrap manager
+	if err := this.bpfManager.Start(); err != nil {
+		return errors.Wrap(err, "couldn't start bootstrap manager")
+	}
+
+	// 加载map信息，map对应events decode表。
+	err = this.initDecodeFun()
 	if err != nil {
 		return err
 	}
-	return d.DNSProbeMaps.Close()
+
+	return nil
 }
 
-func (d *DNSProbeObjects) Events() []*ebpf.Map {
-	var m = []*ebpf.Map{d.DNSEvents}
-	return m
-}
-
-type DNSProbePrograms struct {
-	KprobeDNSGet    *ebpf.Program `ebpf:"getaddrinfo_entry"`
-	KprobeDNSGetRet *ebpf.Program `ebpf:"getaddrinfo_return"`
-}
-
-func (p *DNSProbePrograms) Close() error {
-	e := p.KprobeDNSGet.Close()
-	if e != nil {
-		return e
+func (this *MUDNSProbe) Close() error {
+	if err := this.bpfManager.Stop(manager.CleanAll); err != nil {
+		return errors.Wrap(err, "couldn't stop manager")
 	}
-	return p.KprobeDNSGetRet.Close()
+	return nil
 }
 
-//
-type DNSProbeMaps struct {
-	DNSEvents *ebpf.Map `ebpf:"events"`
+func (this *MUDNSProbe) setupManagers() {
+	this.bpfManager = &manager.Manager{
+		Probes: []*manager.Probe{
+			{
+				Section:          "uprobe/getaddrinfo",
+				EbpfFuncName:     "getaddrinfo_entry",
+				AttachToFuncName: "getaddrinfo",
+				BinaryPath:       "/lib/x86_64-linux-gnu/libc.so.6",
+			},
+			{
+				Section:          "uretprobe/getaddrinfo",
+				EbpfFuncName:     "getaddrinfo_return",
+				AttachToFuncName: "getaddrinfo",
+				BinaryPath:       "/lib/x86_64-linux-gnu/libc.so.6",
+			},
+		},
+
+		Maps: []*manager.Map{
+			{
+				Name: "events",
+			},
+		},
+	}
+
+	this.bpfManagerOptions = manager.Options{
+		DefaultKProbeMaxActive: 512,
+
+		VerifierOptions: ebpf.CollectionOptions{
+			Programs: ebpf.ProgramOptions{
+				LogSize: 2097152,
+			},
+		},
+
+		RLimit: &unix.Rlimit{
+			Cur: math.MaxUint64,
+			Max: math.MaxUint64,
+		},
+	}
 }
 
-func (m *DNSProbeMaps) Close() error {
-	return m.DNSEvents.Close()
+func (this *MUDNSProbe) DecodeFun(em *ebpf.Map) (IEventStruct, bool) {
+	fun, found := this.eventFuncMaps[em]
+	return fun, found
 }
 
-//go:embed bytecode/dns_lookup_kern.o
-var DNSProbeBytes []byte
+func (this *MUDNSProbe) initDecodeFun() error {
+	//eventMap 与解码函数映射
+	DNSEventsMap, found, err := this.bpfManager.GetMap("events")
+	if err != nil {
+		return err
+	}
+	if !found {
+		return errors.New("cant found map:events")
+	}
+	this.eventMaps = append(this.eventMaps, DNSEventsMap)
+	this.eventFuncMaps[DNSEventsMap] = &DNSEVENT{}
+
+	return nil
+}
+
+func (this *MUDNSProbe) Events() []*ebpf.Map {
+	return this.eventMaps
+}
 
 func init() {
-	Register(&EBPFProbeUDNS{EBPFProbe{name: "EBPFProbeUDNS", probeType: PROBE_TYPE_UPROBE}})
+	mod := &MUDNSProbe{}
+	mod.name = "EBPFProbeUDNS"
+	mod.mType = PROBE_TYPE_UPROBE
+	Register(mod)
 }

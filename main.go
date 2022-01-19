@@ -24,25 +24,28 @@ func main() {
 	ctx, cancelFun := context.WithCancel(context.TODO())
 
 	logger := log.Default()
-	for k, probe := range user.ProbeMaps {
-		if probe.ProbeName() != "EBPFProbeUJavaRASP" && probe.ProbeName() != "EBPFProbeProc" {
+	logger.Println("https://github.com/ehids/ehids")
+	logger.Printf("process pid: %d\n", os.Getpid())
+
+	for k, module := range user.GetModules() {
+		if module.Name() != "EBPFProbeUJavaRASP" && module.Name() != "EBPFProbeProc" {
 			// continue   模块启用临时开关
 		}
 
-		logger.Printf("start to run %s probe", k)
+		logger.Printf("start to run %s module", k)
 		//初始化
-		err := probe.Init(ctx, logger)
+		err := module.Init(ctx, logger)
 		if err != nil {
 			panic(err)
 		}
 
 		// 加载ebpf，挂载到hook点上，开始监听
-		go func(probe user.IBPFProbe) {
-			err := probe.Run()
+		go func(module user.IModule) {
+			err := module.Run()
 			if err != nil {
 				logger.Fatalf("%v", err)
 			}
-		}(probe)
+		}(module)
 	}
 
 	<-stopper
