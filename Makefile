@@ -4,7 +4,7 @@ TARGETS += kern/dns_lookup
 TARGETS += kern/udp_lookup
 TARGETS += kern/java_exec
 TARGETS += kern/proc
-EBPF_TARGETS :=$(wildcard ./user/bytecode/*.o)
+TARGETS += kern/bpf_call
 
 # Generate file name-scheme based on TARGETS
 KERN_SOURCES = ${TARGETS:=_kern.c}
@@ -12,7 +12,7 @@ KERN_OBJECTS = ${KERN_SOURCES:.c=.o}
 
 LLC ?= llc
 CLANG ?= clang
-EXTRA_CFLAGS ?= -O2 -mcpu=v1 -nostdinc
+EXTRA_CFLAGS ?= -O2 -mcpu=v1 -nostdinc -Wno-pointer-sign
 
 LINUXINCLUDE =  \
 		-I/usr/include \
@@ -28,6 +28,7 @@ all: $(KERN_OBJECTS) assets build
 clean:
 	rm -f user/bytecode/*.d
 	rm -f user/bytecode/*.o
+	rm -f assets/ebpf_probe.go
 	rm -f bin/ehids
 
 $(KERN_OBJECTS): %.o: %.c
@@ -38,7 +39,7 @@ $(KERN_OBJECTS): %.o: %.c
 		-MD -MP
 
 assets:
-	go-bindata -pkg assets -o "assets/ebpf_probe.go" $(EBPF_TARGETS)
+	go-bindata -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
 
 build:
 	go build -o bin/ehids .

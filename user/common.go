@@ -7,6 +7,7 @@ import (
 const (
 	PROBE_TYPE_UPROBE = "uprobe"
 	PROBE_TYPE_KPROBE = "kprobe"
+	PROBE_TYPE_TP     = "tracepoint"
 )
 
 const (

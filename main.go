@@ -28,8 +28,8 @@ func main() {
 	logger.Printf("process pid: %d\n", os.Getpid())
 
 	for k, module := range user.GetModules() {
-		if module.Name() != "EBPFProbeUJavaRASP" && module.Name() != "EBPFProbeProc" {
-			// continue   模块启用临时开关
+		if module.Name() != "EBPFProbeBPFCall" {
+			continue //模块启用临时开关
 		}
 
 		logger.Printf("start to run %s module", k)
