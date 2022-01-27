@@ -14,11 +14,7 @@ LLC ?= llc
 CLANG ?= clang
 EXTRA_CFLAGS ?= -O2 -mcpu=v1 -nostdinc -Wno-pointer-sign
 
-LINUXINCLUDE =  \
-		-I/usr/include \
-		-I/home/cfc4n/download/linux-5.11.0/include \
-		-I/home/cfc4n/download/linux-5.11.0/tools/lib
-
+BPFHEADER = -I./kern
 
 all: $(KERN_OBJECTS) assets build
 	@echo $(shell date)
@@ -33,13 +29,13 @@ clean:
 
 $(KERN_OBJECTS): %.o: %.c
 	$(CLANG) $(EXTRA_CFLAGS) \
-		$(LINUXINCLUDE) \
+		$(BPFHEADER) \
 		-target bpfel -c $< -o $(subst kern/,user/bytecode/,$@) \
 		-fno-ident -fdebug-compilation-dir . -g -D__BPF_TARGET_MISSING="GCC error \"The eBPF is using target specific macros, please provide -target\"" \
 		-MD -MP
 
 assets:
-	go-bindata -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
+	go run github.com/shuLhan/go-bindata/cmd/go-bindata -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
 
 build:
 	go build -o bin/ehids .

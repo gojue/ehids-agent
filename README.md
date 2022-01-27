@@ -76,7 +76,7 @@ eBPF内核技术实现的HIDS demo.
 ## 编译
 
 ```shell
-git clone https://github.com/cfc4n/ehids.git
+git clone https://github.com/ehids/ehids.git
 cd ehids
 make
 ./bin/ehids
