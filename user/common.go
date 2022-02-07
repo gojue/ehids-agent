@@ -8,6 +8,7 @@ const (
 	PROBE_TYPE_UPROBE = "uprobe"
 	PROBE_TYPE_KPROBE = "kprobe"
 	PROBE_TYPE_TP     = "tracepoint"
+	PROBE_TYPE_XDP    = "XDP"
 )
 
 const (
