@@ -24,12 +24,12 @@ func main() {
 	ctx, cancelFun := context.WithCancel(context.TODO())
 
 	logger := log.Default()
-	logger.Println("https://github.com/ehids/ehids")
+	logger.Println("https://github.com/ehids/ehids-agent")
 	logger.Printf("process pid: %d\n", os.Getpid())
 
 	for k, module := range user.GetModules() {
 		if module.Name() != "EBPFProbeBPFCall" {
-			continue //模块启用临时开关
+			//continue //模块启用临时开关
 		}
 
 		logger.Printf("start to run %s module", k)
