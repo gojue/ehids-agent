@@ -125,22 +125,18 @@ root@vmubuntu:/home/cfc4n/project/ehids# ./bin/ehids
 * https://github.com/trichimtrich/dns-tcp-ebpf
 * https://github.com/p-/socket-connect-bpf
 
-# eBPF的攻击场景
+# eBPF的恶意利用与检测机制
 
-笔者在2021年12月30日分享了一篇[内核态eBPF程序实现容器逃逸与隐藏账号rootkit](https://mp.weixin.qq.com/s?__biz=MzUyMDM0OTY5NA==&mid=2247483773&idx=1&sn=d9a6233f2ec94b63304209246b1b6a3b&chksm=f9eaf3ecce9d7afa8c539e47ddd0250874859bc4e81e6206a0d1b3fdaffd712bf81389ced579&token=1909106120&lang=zh_CN#rd)
-的文章，录制一个视频，演示了eBPF实现容器逃逸与隐藏账号的rootkit的过程。这段时间，很多安全研究者私信问我github仓库为啥没有这部分代码。笔者告知一下，由于该功能危害较大，不会分享，希望大家尽快完成基于eBPF的攻防体系建设。
+基于eBPF的恶意利用与检测机制文章，已经分享在`美团安全应急响应中心`微信公众号上，[eBPF的恶意利用与检测机制](https://mp.weixin.qq.com/s/-1GiCncNTqtfO_grQT7cGw)
 
-* 使用eBPF获取系统事件、信息，相比netlink、内核模块，数据更全、更高效、更稳定、更可控。
-* 使用eBPF感知bpf调用，防范bpf的攻击行为。
+![](./images/ebpf-evil-use-detect-kernel-space.png)
 
 # 微信群 Wechat Group
 
 ![](./images/wechat-group.jpg)
 
-## 演示视频
+# 说明
 
-[![内核态eBPF程序实现容器逃逸与隐藏账号rootkit ](https://res.cloudinary.com/marcomontalbano/image/upload/v1642168894/video_to_markdown/images/youtube--LF4Ox96Rmhs-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://www.youtube.com/watch?v=LF4Ox96Rmhs "内核态eBPF程序实现容器逃逸与隐藏账号rootkit ")
-
-# 团队招聘
+非美团官方仓库，仅为工程师个人贡献。
 
 该仓库非美团在用HIDS版本，为精简后demo，若需要查看详细全部源码，请点击：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)
