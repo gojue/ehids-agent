@@ -43,7 +43,7 @@ func main() {
 		go func(module user.IModule) {
 			err := module.Run()
 			if err != nil {
-				logger.Fatalf("%v", err)
+				logger.Printf("%v\n", err)
 			}
 		}(module)
 	}

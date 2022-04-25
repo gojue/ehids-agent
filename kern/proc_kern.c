@@ -40,8 +40,7 @@ typedef struct _process_info_t
 
 struct
 {
-    __uint(type, BPF_MAP_TYPE_RINGBUF);
-    __uint(max_entries, 1 << 24); // need page align
+    __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
 } ringbuf_proc SEC(".maps");
 
 struct sys_enter_exit_args
@@ -102,7 +101,8 @@ int kretprobe_copy_process(struct pt_regs *regs)
     ringbuf_process->start_time = BPF_CORE_READ(task, start_time);
     ringbuf_process->uts_inum = BPF_CORE_READ(task, nsproxy, uts_ns, ns).inum;
    
-    bpf_ringbuf_submit(ringbuf_process, 0);
+//    bpf_ringbuf_submit(ringbuf_process, 0);
+    bpf_perf_event_output(regs, &ringbuf_proc, BPF_F_CURRENT_CPU, &ringbuf_process, sizeof(ringbuf_process));
 #endif
     return 0;
 }
