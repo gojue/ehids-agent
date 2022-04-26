@@ -40,7 +40,8 @@ typedef struct _process_info_t
 
 struct
 {
-    __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, 1 << 24); // need page align
 } ringbuf_proc SEC(".maps");
 
 struct sys_enter_exit_args
@@ -66,7 +67,7 @@ SEC("kretprobe/copy_process")
 int kretprobe_copy_process(struct pt_regs *regs)
 {
 #ifdef ENABLE_FORK
-    struct task_struct *task = (struct task_struct *)regs->ax;  //copy_process 返回的是子进程 task_struct
+    struct task_struct *task = (struct task_struct *)PT_REGS_RC(regs);  //copy_process 返回的是子进程 task_struct
     long ret = 0, offset = 0;
     proc_info_t *ringbuf_process;
 
@@ -101,8 +102,7 @@ int kretprobe_copy_process(struct pt_regs *regs)
     ringbuf_process->start_time = BPF_CORE_READ(task, start_time);
     ringbuf_process->uts_inum = BPF_CORE_READ(task, nsproxy, uts_ns, ns).inum;
    
-//    bpf_ringbuf_submit(ringbuf_process, 0);
-    bpf_perf_event_output(regs, &ringbuf_proc, BPF_F_CURRENT_CPU, &ringbuf_process, sizeof(ringbuf_process));
+    bpf_ringbuf_submit(ringbuf_process, 0);
 #endif
     return 0;
 }

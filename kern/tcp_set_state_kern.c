@@ -49,12 +49,12 @@ struct
 SEC("kprobe/tcp_set_state")
 int kprobe__tcp_set_state(struct pt_regs *ctx)
 {
-    struct sock *sk = (struct sock *)(ctx)->di;
+    struct sock *sk = (struct sock *)PT_REGS_PARM1(ctx);
 
     if (!sk)
         return 0;
 
-    int state = (int)(ctx)->si;
+    int state = (int)PT_REGS_PARM2(ctx);
 
     struct conn_t *pconn;
     pconn = bpf_map_lookup_elem(&conns, &sk);

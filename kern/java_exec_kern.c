@@ -25,7 +25,7 @@ struct
 SEC("uprobe/JDK_execvpe")
 int java_JDK_execvpe(struct pt_regs *ctx) {
     
-    int *mode = (int *)(ctx->di); //
+    int *mode = (int *)PT_REGS_PARM1(ctx); //
 
     if (!mode) {
        return 0;   // missed entry
@@ -39,7 +39,7 @@ int java_JDK_execvpe(struct pt_regs *ctx) {
     
     val.mode = (u64)mode;
 
-    const char *file = (const char *)(ctx->si); //
+    const char *file = (const char *)PT_REGS_PARM2(ctx); //
 
     if (!file) {
        return 0;   // missed entry
@@ -49,7 +49,7 @@ int java_JDK_execvpe(struct pt_regs *ctx) {
 
     const char (*argv)[];
     // bpf_probe_read(&resx, sizeof(resx), (struct addrinfo **)res);
-    if (bpf_probe_read(&argv, sizeof(argv), (const char(*)[])(ctx->dx)) != 0) {
+    if (bpf_probe_read(&argv, sizeof(argv), (const char(*)[])PT_REGS_PARM3(ctx)) != 0) {
        return 0;   // missed entry
     }       
 

@@ -53,7 +53,7 @@ int trace_udp_recvmsg(struct pt_regs *ctx)
     // only grab port 53 packets, 13568 is ntohs(53)
     if (dport == 13568)
     {
-        struct msghdr *msg = (struct msghdr *)(ctx)->si;
+        struct msghdr *msg = (struct msghdr *)PT_REGS_PARM2(ctx);
         bpf_map_update_elem(&tbl_udp_msg_hdr, &pid_tgid, &msg, BPF_ANY);
     }
     return 0;
@@ -75,7 +75,7 @@ int trace_ret_udp_recvmsg(struct pt_regs *ctx)
     if (iter.type != ITER_IOVEC)
         goto delete_and_return;
 
-    int copied = (int)(ctx)->ax;
+    int copied = (int)PT_REGS_RC(ctx);
     if (copied < 0 || copied > MAX_PKT)
         // dns packet < 512 bytes
         goto delete_and_return;

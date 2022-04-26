@@ -58,7 +58,7 @@ int getaddrinfo_entry(struct pt_regs *ctx) {
         return 0;
     struct val_t val = {};
 
-    bpf_probe_read(&val.host, sizeof(val.host), (void *)(ctx)->di);
+    bpf_probe_read(&val.host, sizeof(val.host), (void *)PT_REGS_PARM1(ctx));
     u64 pid_tgid = bpf_get_current_pid_tgid();
     u32 pid = pid_tgid >> 32;
     val.pid = pid;

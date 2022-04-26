@@ -67,12 +67,12 @@ int kprobe__security_socket_connect(struct pt_regs *ctx) {
     u32 uid = bpf_get_current_uid_gid();
 
     //获取sock信息
-    struct sock *skp = (struct sock *)(ctx)->di;
+    struct sock *skp = (struct sock *)PT_REGS_PARM1(ctx);
     if (!skp)
         return 0;
 
     //获取addr信息
-    struct sockaddr *address = (struct sockaddr *)(ctx)->si;
+    struct sockaddr *address = (struct sockaddr *)PT_REGS_PARM2(ctx);
     if (!address)
         return 0;
 
