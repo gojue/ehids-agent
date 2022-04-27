@@ -97,8 +97,11 @@ int kretprobe_copy_process(struct pt_regs *regs)
 
     ringbuf_process->grandparent_pid = BPF_CORE_READ(task, real_parent, real_parent, pid);
     ringbuf_process->grandparent_tgid = BPF_CORE_READ(task, real_parent, real_parent, tgid);
-    ringbuf_process->uid = BPF_CORE_READ(task, cred, uid).val;
-    ringbuf_process->gid = BPF_CORE_READ(task, cred, gid).val;
+    //ringbuf_process->uid = BPF_CORE_READ(task, cred, uid).val;
+    //ringbuf_process->gid = BPF_CORE_READ(task, cred, gid).val;
+    __u64 uid_gid = bpf_get_current_uid_gid();
+    ringbuf_process->uid = uid_gid;
+    ringbuf_process->gid = uid_gid >> 32;
     ringbuf_process->start_time = BPF_CORE_READ(task, start_time);
     ringbuf_process->uts_inum = BPF_CORE_READ(task, nsproxy, uts_ns, ns).inum;
    
