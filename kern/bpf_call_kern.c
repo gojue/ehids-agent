@@ -1,8 +1,4 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
-#include <bpf/bpf_core_read.h>
-#include <bpf/bpf_endian.h>
+#include "ehids_agent.h"
 
 //辅助Map索引
 #define CWD_BUF_IDX                     0
@@ -312,5 +308,3 @@ int tracepoint_sys_enter_bpf(struct syscall_bpf_args *args) {
 	send_event(args, bpf_context);
     return 0;
 }
-
-char _license[] SEC("license") = "GPL";

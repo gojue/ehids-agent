@@ -1,7 +1,4 @@
-#include "vmlinux.h"
-
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
+#include "ehids_agent.h"
 
 #define F_OUTBOUND 0x1
 #define F_CONNECTED 0x10
@@ -154,5 +151,3 @@ update_conn:
     bpf_map_update_elem(&conns, &sk, &conn, BPF_ANY);
     return 0;
 }
-
-char __license[] SEC("license") = "GPL";

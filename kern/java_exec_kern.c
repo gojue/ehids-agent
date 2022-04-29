@@ -1,7 +1,4 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
-#include <bpf/bpf_core_read.h>
+#include "ehids_agent.h"
 
 //solaris/native/java/lang/childproc.h
 struct jdk_execvpe {
@@ -56,5 +53,3 @@ int java_JDK_execvpe(struct pt_regs *ctx) {
     bpf_perf_event_output(ctx, &jdk_execvpe_events, BPF_F_CURRENT_CPU, &val, sizeof(val));
     return 0;
 }
-
-char __license[] SEC("license") = "GPL";

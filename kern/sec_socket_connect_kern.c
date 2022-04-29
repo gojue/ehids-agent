@@ -1,6 +1,8 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
+#include "ehids_agent.h"
+
+#ifndef NOCORE
+    // TODO
+#endif
 
 #define TASK_COMM_LEN 16
 #define AF_UNIX 1
@@ -127,5 +129,3 @@ int kprobe__security_socket_connect(struct pt_regs *ctx) {
 
     return 0;
 }
-
-char __license[] SEC("license") = "GPL";

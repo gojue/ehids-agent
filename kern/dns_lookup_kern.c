@@ -1,6 +1,4 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
+#include "ehids_agent.h"
 
 #define AF_INET 2
 #define AF_INET6 10
@@ -124,5 +122,3 @@ int getaddrinfo_return(struct pt_regs *ctx) {
     bpf_map_delete_elem(&currres, &pid);
     return 0;
 }
-
-char __license[] SEC("license") = "GPL";

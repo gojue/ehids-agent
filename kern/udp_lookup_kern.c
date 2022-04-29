@@ -1,6 +1,4 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_tracing.h>
+#include "ehids_agent.h"
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-dnsind-udp-size
 // max udp size for DNS
@@ -116,5 +114,3 @@ delete_and_return:
     bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
     return 0;
 }
-
-char __license[] SEC("license") = "GPL";

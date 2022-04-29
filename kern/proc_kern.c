@@ -1,7 +1,4 @@
-#include "vmlinux.h"
-#include <bpf/bpf_helpers.h>
-#include <bpf/bpf_core_read.h>
-#include <bpf/bpf_tracing.h>
+#include "ehids_agent.h"
 
 #define MAX_DEPTH 10
 
@@ -106,5 +103,3 @@ int kretprobe_copy_process(struct pt_regs *regs)
 #endif
     return 0;
 }
-
-char LICENSE[] SEC("license") = "GPL";
