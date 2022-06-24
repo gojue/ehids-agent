@@ -1,5 +1,7 @@
 ![](./images/ehids-logo-1.png)
 
+[English](./README.md) | 中文介绍
+
 # eHIDS 介绍
 eBPF内核技术实现的HIDS demo. 
 
