@@ -1,66 +1,75 @@
 ![](./images/ehids-logo-1.png)
 
-# eHIDS 介绍
-eBPF内核技术实现的HIDS demo. 
+English | [中文介绍](./README_CN.md)
 
-功能实现：
-1. TCP网络数据捕获
-2. UDP网络数据捕获
-3. uprobe方式的DNS信息捕获
-4. 进程数据捕获
-5. uprobe方式实现JAVA的RASP命令执行场景事件捕获
-6. eBPF的go框架实现，针对kprobe\uprobe挂载方式，多类型event进行抽象实现。
-7. 开发者只需要实现内核态C文件，用户态go文件，用户态event消息结构体三个文件即可，框架会自动加载执行。
-8. 使用者可以按照logger的interface自行实现数据的上报处理，比如上报到ES\kafka等日志中心。
+# Introduction to eHIDS
+
+HIDS demo implemented by eBPF kernel technology.
+
+Implementations & Functionalities：
+
+1. TCP network data capture
+2. UDP network data capture
+3. DNS information capture in uprobe mode
+4. Process data capture
+5. Uprobe way to achieve JAVA RASP command execution scene event capture
+6. Go framework implementation of eBPF, abstract implementation of multi-type events for the kprobe\uprobe mounting method.
+7. Developers only need to implement three files: 
+    * The kernel-mode C file.
+    * The user-mode go file.
+    * The user-mode event message structure, and the framework will automatically load and execute.
+8. Users can implement data reporting and processing according to the logger interface, such as reporting to ES\kafka and other log centers.
 
 
-# 原理
+# Principle
 
-参考[ebpf](https://ebpf.io)官网的介绍
+Reference : [eBPF Official Website](https://ebpf.io)
+
 ![](https://ebpf.io/static/overview-bf463455a5666fc3fb841b9240d588ff.png)
 
-1. 内核态用C写eBPF代码，llvm编译为eBPF字节码。
-2. 用户态使用golang编写，cilium/ebpf纯go类库，做eBPF字节码的内核加载，kprobe/uprobe HOOK对应函数。
-3. 用户态使用golang做事件读取、解码、处理。
+1. In the kernel mode, eBPF code is written in C, and llvm is compiled into eBPF bytecode.
+2. User mode is written in golang, cilium/ebpf pure go class library, kernel loading of eBPF bytecode, kprobe/uprobe HOOK corresponding function.
+3. User mode uses golang for event reading, decoding, and processing.
 
-# 规划
-## 排期规划
-笔者在从源码角度分析cilium、datadog、tracee、falco、kubeArmor等云原生相关eBPF技术实现的运行时安全防护产品，在分析完成后，会继续分享本产品的设计方案、思路、功能等。
+# Planning
+## Scheduling
+The author is analyzing the runtime security protection products implemented by cloud-native eBPF technologies such as cilium, datadog, tracee, falco, and kubeArmor from the perspective of source code. 
+After the analysis is completed, I will continue to share the design, ideas, and functions of this product.
 
-当前进展完成
+Current progress & Changes
 
-* 【DONE】2021-12-09 [Cilium eBPF实现机制源码分析](https://www.cnxct.com/how-does-cilium-use-ebpf-with-go-and-c/?f=g_ehids)
-* 【DONE】2021-12-19 [datadog的eBPF安全检测机制分析](https://www.cnxct.com/how-does-datadog-use-ebpf-in-runtime-security/?f=g_ehids)
-* 【DONE】2021-12-30 [内核态eBPF程序实现容器逃逸与隐藏账号rootkit](https://mp.weixin.qq.com/s?__biz=MzUyMDM0OTY5NA==&mid=2247483773&idx=1&sn=d9a6233f2ec94b63304209246b1b6a3b&chksm=f9eaf3ecce9d7afa8c539e47ddd0250874859bc4e81e6206a0d1b3fdaffd712bf81389ced579&token=1909106120&lang=zh_CN#rd)
-* 【DING】2022-1-31 tracee eBPF实现机制源码分析
+* 【DONE】2021-12-09 [Source code analysis of Cilium eBPF implementation mechanism](https://www.cnxct.com/how-does-cilium-use-ebpf-with-go-and-c/?f=g_ehids)
+* 【DONE】2021-12-19 [Analysis of datadog's eBPF security detection mechanism](https://www.cnxct.com/how-does-datadog-use-ebpf-in-runtime-security/?f=g_ehids)
+* 【DONE】2021-12-30 [Kernel state eBPF program to implement container escape and hide account rootkit](https://mp.weixin.qq.com/s?__biz=MzUyMDM0OTY5NA==&mid=2247483773&idx=1&sn=d9a6233f2ec94b63304209246b1b6a3b&chksm=f9eaf3ecce9d7afa8c539e47ddd0250874859bc4e81e6206a0d1b3fdaffd712bf81389ced579&token=1909106120&lang=zh_CN#rd)
+* 【DING】2022-1-31 tracee Source code analysis of eBPF implementation mechanism
 * ...
 
-## 产品功能
-1. 功能完善（网络、进程、文件、事件）
-2. 监控
-3. 告警
-4. 熔断
-5. 统计
-6. 对账
-7. 统一管控
+## Prodcut Features
+1. Complete functions (network, process, file, event)
+2. Monitoring
+3. Alert
+4. Fusing
+5. Statistics
+6. Reconciliation
+7. Unified management and control
 
-# 说明
+# Instructions
 
-1. 内核态部分为linux原生类库实现的ebpf编程代码，使用clang(llvm)进行字节码编译。
-2. 用户态部分为golang的cilium/ebpf类库编写，实现加载eBPF字节码到内核，挂载到hook点，事件读取等功能。
-3. 本项目分别用kprobe、uprobe实现了TCP、UDP的网络事件捕获。
+1. The kernel mode part is the ebpf programming code implemented by the linux native class library, and uses clang (llvm) for bytecode compilation.
+2. The user mode part is written for golang's cilium/ebpf class library, which implements functions such as loading eBPF bytecodes to the kernel, mounting to hook points, and event reading.
+3. This project uses kprobe and uprobe respectively to realize the network event capture of TCP and UDP.
   
 
-# 开发环境
+# Development Environment
 
 * UBUNTU 21.04 server
 * go version go1.17.2 linux/amd64
 * Ubuntu clang version 12.0.0-3ubuntu1~21.04.2
 * openjdk version "1.8.0_292"
 
-## 环境安装步骤
+## Environment installation steps
 
-参见[CFC4N的eBPF开发环境](https://www.cnxct.com/lessons-using-ebpf-accelerating-cloud-native-zh/?f=github#i-3)
+See also : [CFC4N's eBPF development environment](https://www.cnxct.com/lessons-using-ebpf-accelerating-cloud-native-zh/?f=github#i-3)
 
 * sudo apt-get install -y make gcc libssl-dev bc libelf-dev libcap-dev clang gcc-multilib llvm libncurses5-dev git
   pkg-config libmnl-dev bison flex graphviz
@@ -71,9 +80,9 @@ eBPF内核技术实现的HIDS demo.
 * sudo apt-get source linux-image-unsigned-$(uname -r)
 * sudo apt install libbfd-dev libcap-dev zlib1g-dev libelf-dev libssl-dev
 
-# 编译运行
+# Compiling and running
 
-## 编译
+## Compilation
 
 ```shell
 git clone https://github.com/ehids/ehids-agent.git
@@ -82,21 +91,22 @@ make
 ./bin/ehids-agent
 ```
 
-## 运行
+## Runnig
 
-再开一个shell，执行网络命令，触发网络行为
+Open another shell, execute network commands, and trigger network behavior
 ```shell
 wget www.cnxct.com
 ```
 
-或者编译运行java的命令执行例子，来测试java RASP的功能。
-uprobe挂载了libjava.so的 JDK_execvpe函数，对应偏移地址offset为0x19C30，其他版本请自行定位偏移地址。
+Or compile and run the java command execution example to test the function of java RASP.
+Uprobe mounts the JDK_execvpe function of libjava.so, and the corresponding offset address offset is 0x19C30. 
+For other versions, please locate the offset address by yourself.
 ```shell
 cd examples
 javac Main.java
 java Main
 ```
-JAVA JDK版本信息如下
+JAVA JDK version information
 > ~$java -version
 > 
 > openjdk version "1.8.0_292" 
@@ -104,7 +114,7 @@ JAVA JDK版本信息如下
 > OpenJDK Runtime Environment (build 1.8.0_292-8u292-b10-0ubuntu1-b10)
 > 
 > OpenJDK 64-Bit Server VM (build 25.292-b10, mixed mode)
-## 结果
+## Results
 
 ```shell
 root@vmubuntu:/home/cfc4n/project/ehids# ./bin/ehids
@@ -119,24 +129,24 @@ root@vmubuntu:/home/cfc4n/project/ehids# ./bin/ehids
 2021/12/01 19:27:10 probeName:EBPFProbeUJavaRASP, probeTpye:uprobe, JAVA RASP exec and fork. PID:409049, command:ifconfig, mode:MODE_VFORK
 ```
 
-# 参考
+# References
 
 * https://ebpf.io
 * https://github.com/trichimtrich/dns-tcp-ebpf
 * https://github.com/p-/socket-connect-bpf
 
-# eBPF的恶意利用与检测机制
+# Malicious exploitation and detection mechanism of eBPF
 
-基于eBPF的恶意利用与检测机制文章，已经分享在`美团安全应急响应中心`微信公众号上，[eBPF的恶意利用与检测机制](https://mp.weixin.qq.com/s/-1GiCncNTqtfO_grQT7cGw)
+The article on malicious exploitation and detection mechanism based on eBPF has been shared on the WeChat public account of `Meituan Security Emergency Response Center`，[Malicious utilization and detection mechanism of eBPF](https://mp.weixin.qq.com/s/-1GiCncNTqtfO_grQT7cGw)
 
 ![](./images/ebpf-evil-use-detect-kernel-space.png)
 
-# 微信群 Wechat Group
+# Wechat Group 
 
 ![](./images/wechat-group.jpg)
 
-# 说明
+# Notes
 
-非美团官方仓库，仅为工程师个人贡献。
+It is not the official warehouse of Meituan, and is only contributed by engineers.
 
-该仓库非美团在用HIDS版本，为精简后demo，若需要查看详细全部源码，请点击：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)
+The repository does not contain the full HIDS version in use by **Meituan**, for the streamlined demo, if you need to see the full source code in detail, please click：[https://www.cnxct.com/jobs/](https://www.cnxct.com/jobs/?f=ehids-github)
