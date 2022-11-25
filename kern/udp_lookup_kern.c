@@ -70,13 +70,16 @@ int trace_ret_udp_recvmsg(struct pt_regs *ctx)
     struct iov_iter iter = {};
 
     bpf_probe_read(&iter, sizeof(iter), &msghdr->msg_iter);
-    if (iter.type != ITER_IOVEC)
-        goto delete_and_return;
+    if (iter.type != ITER_IOVEC) {
+        bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
+        return 0;
+    }
 
     int copied = (int)PT_REGS_RC(ctx);
-    if (copied < 0 || copied > MAX_PKT)
-        // dns packet < 512 bytes
-        goto delete_and_return;
+    if (copied < 0 || copied > MAX_PKT)  {
+        bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
+        return 0;
+    }
 
     // bpf_printk("len: %d\n", copied);
 
@@ -89,8 +92,10 @@ int trace_ret_udp_recvmsg(struct pt_regs *ctx)
     
     struct iovec iov;
     bpf_probe_read(&iov, sizeof(iov), iter.iov);
-    if (buflen > iov.iov_len)
-        goto delete_and_return;
+    if (buflen > iov.iov_len) {
+         bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
+         return 0;
+     }
 
     u32 zero = 0;
     struct dns_data_t *data = bpf_map_lookup_elem(&dns_data, &zero);
@@ -99,8 +104,10 @@ int trace_ret_udp_recvmsg(struct pt_regs *ctx)
         return 0;
 
     // TODO: remove this
-    if (bpf_get_current_comm(data->comm, sizeof(data->comm)) != 0)
-        goto delete_and_return;
+    if (bpf_get_current_comm(data->comm, sizeof(data->comm)) != 0){
+        bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
+        return 0;
+    }
 
     bpf_probe_read(data->pkt, buflen, iov.iov_base);
 
@@ -110,7 +117,6 @@ int trace_ret_udp_recvmsg(struct pt_regs *ctx)
 
     // 55: (85) call bpf_probe_read#4 R2 min value is negative, either use unsigned or 'var &= const'
     //相同案例 https://lists.iovisor.org/g/iovisor-dev/topic/30315706
-delete_and_return:
     bpf_map_delete_elem(&tbl_udp_msg_hdr, &pid_tgid);
     return 0;
 }
