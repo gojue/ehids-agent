@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"ehids/user"
+	"github.com/cilium/ebpf/rlimit"
+	_ "github.com/shuLhan/go-bindata"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/cilium/ebpf/rlimit"
 )
 
 func main() {

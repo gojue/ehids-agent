@@ -7,6 +7,7 @@ require (
 	github.com/cirocosta/rawdns v0.0.0-20191213194345-8bbd9250550b
 	github.com/ehids/ebpfmanager v0.2.2
 	github.com/pkg/errors v0.9.1
+	github.com/shuLhan/go-bindata v4.0.0+incompatible
 	github.com/tredoe/osutil v1.0.6
 	golang.org/x/sys v0.0.0-20211210111614-af8b64212486
 )
@@ -20,7 +21,6 @@ require (
 	github.com/josharian/native v0.0.0-20200817173448-b6b71def0850 // indirect
 	github.com/mdlayher/netlink v1.4.1 // indirect
 	github.com/mdlayher/socket v0.0.0-20210307095302-262dc9984e00 // indirect
-	github.com/shuLhan/go-bindata v4.0.0+incompatible // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/vishvananda/netlink v1.1.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df // indirect

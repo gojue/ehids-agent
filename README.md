@@ -4,7 +4,10 @@ English | [中文介绍](./README_CN.md)
 
 # Introduction to eHIDS
 
-HIDS demo implemented by eBPF kernel technology.
+HIDS `demo` implemented by eBPF kernel technology.
+
+Just a eBPF-based DEMO, please use [Tetragon](https://github.com/cilium/tetragon)
+/  [Tracee](https://github.com/aquasecurity/tracee) / [falco](https://github.com/falcosecurity/falco) instead.
 
 Implementations & Functionalities：
 
@@ -13,8 +16,9 @@ Implementations & Functionalities：
 3. DNS information capture in uprobe mode
 4. Process data capture
 5. Uprobe way to achieve JAVA RASP command execution scene event capture
-6. Go framework implementation of eBPF, abstract implementation of multi-type events for the kprobe\uprobe mounting method.
-7. Developers only need to implement three files: 
+6. Go framework implementation of eBPF, abstract implementation of multi-type events for the kprobe\uprobe mounting
+   method.
+7. Developers only need to implement three files:
     * The kernel-mode C file.
     * The user-mode go file.
     * The user-mode event message structure, and the framework will automatically load and execute.

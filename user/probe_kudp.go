@@ -139,5 +139,5 @@ func init() {
 	mod := &MUDPProbe{}
 	mod.name = "EBPFProbeKUDP"
 	mod.mType = PROBE_TYPE_KPROBE
-	Register(mod)
+	//Register(mod)
 }
